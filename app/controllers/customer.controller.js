@@ -226,12 +226,61 @@ exports.outputMeasureRanked = (req, res) => {
           });
         }
       } else {
-        // Отправляем на скрипт данные о предприятии
 
-        //Сортируем по нужным полям
+        Measure.findAllMeasure((err, data_set) => {
+          if (err) {
+            if (err.kind === "not_found") {
+              res.status(404).send({
+                message: `Not found Customer with id ${req.body.username}.`
+              });
+            } else {
+              res.status(500).send({
+                message: "Error retrieving Customer with id " + req.body.username
+              });
+            }
+          } else {
 
-        // Отправляем ответ
-        res.send(data_set);
+            //Сортируем по нужным полям
+
+
+            var request = require('request');
+            var options = {
+              'method': 'POST',
+              'url': 'http://192.168.1.34:4000/api/get_range_money_grants_for_inn/',
+              'headers': {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({"SECRET_API_KEY":"ABC123","inn":data.branch.toString(),"kbk_list":[data_set[0].title,data_set[1].title,data_set[2].title,data_set[3].title]})
+
+            };
+            request(options, function (error, response) {
+              if (error) throw new Error(error);
+              let ves_set = JSON.parse(response.body);
+              console.log("ves_set", ves_set["result"])
+              ves_set = ves_set.result;
+
+              let prom = Math.floor(80/ves_set.length);
+
+              for (let i = 0; i < data_set.length; i++) {
+                data_set[i]["ves"] = ves_set[i]
+              }
+
+              data_set.sort((prev, next) => prev.ves - next.ves);
+              let t = 1;
+              for (let i = 0; i < data_set.length; i++) {
+                data_set[i]["ves"] = 20 + prom * t;
+                t++;
+              }
+              data_set.reverse()
+
+              // Отправляем ответ
+              res.send(data_set);
+              console.log(response.body);
+            });
+          }
+        });
+
+
       }
     });
   } catch (e) {
