@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 import pandas as pd
 
 
-def load_dict():
+def load_dict1():
     with open('model1/id_to_itemid.p', 'rb') as fp:
         id_to_itemid = pickle.load(fp)
 
@@ -25,7 +25,7 @@ def load_model1():
 
 
 if __name__ == '__main__':
-    id_to_itemid, id_to_userid, itemid_to_id, userid_to_id = load_dict()
+    id_to_itemid, id_to_userid, itemid_to_id, userid_to_id = load_dict1()
 
     test_item_ids = np.array([
         itemid_to_id['00701100130290059612'],

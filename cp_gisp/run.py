@@ -1,5 +1,5 @@
 import config
-from model import load_model1, load_dict
+from model import load_model1, load_dict1
 from flask import Flask, request, jsonify
 import os
 import logging
@@ -25,11 +25,11 @@ def general():
 
 
 @app.route("/api/get_range_money_grants_for_inn/", methods=["POST"])
-def add_job():
+def get_range_money_grants_for_inn():
     # initialize the data dictionary that will be returned from the
     # view
     data = {"success": False}
-
+    print(request.get_json())
     # ensure an image was properly uploaded to our endpoint
     if request.method == "POST" and request.get_json():
         # Load data
@@ -43,10 +43,10 @@ def add_job():
             return jsonify(data)
 
         # Get input data
-        inn = request_json.get('inn', 0)
+        inn = int(request_json.get('inn', 0))
         grant_lst = request_json.get('kbk_list', [])
 
-        id_to_itemid, id_to_userid, itemid_to_id, userid_to_id = load_dict()
+        id_to_itemid, id_to_userid, itemid_to_id, userid_to_id = load_dict1()
         model1 = load_model1()
         user_feat_lightfm = pd.read_csv('model1/user_feat_lightfm.csv', index_col=0)
 
@@ -54,13 +54,14 @@ def add_job():
         for item in grant_lst:
             grant_lst_id.append(itemid_to_id[item])
 
-        user_id = userid_to_id[inn]
+        user_id = int(userid_to_id[inn])
 
         predictions = model1.predict(user_ids=user_id, item_ids=grant_lst_id,
                                      user_features=csr_matrix(user_feat_lightfm.values).tocsr(),
                                      num_threads=4)
+        predictions_lst = [str(x) for x in predictions]
 
-        data["success"], data["result"] = True, predictions
+        data["success"], data["result"] = True, predictions_lst
 
     # return the data dictionary as a JSON response
     return jsonify(data)
